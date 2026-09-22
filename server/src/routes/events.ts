@@ -13,6 +13,13 @@ async function ownedProperty(propertyId: string, userId?: string) {
   return prisma.property.findFirst({ where: { id: propertyId, userId } });
 }
 
+function parseCost(value: unknown): number | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
 // GET /api/properties/:propertyId/events
 eventsRouter.get<{ propertyId: string }>("/", async (req, res) => {
   const property = await ownedProperty(req.params.propertyId, req.userId);
@@ -30,7 +37,7 @@ eventsRouter.post<{ propertyId: string }>(
   "/",
   upload.array("files", 20),
   async (req, res) => {
-    const { title, eventType, eventDate, description } = req.body;
+    const { title, eventType, eventDate, description, cost } = req.body;
     if (!title || !eventDate) {
       return res.status(400).json({ error: "title and eventDate are required" });
     }
@@ -58,6 +65,7 @@ eventsRouter.post<{ propertyId: string }>(
         eventType: eventType || "other",
         eventDate: new Date(eventDate),
         description: description || null,
+        cost: parseCost(cost) ?? null,
         attachments: { create: uploaded },
       },
       include: { attachments: true },
@@ -72,11 +80,12 @@ eventsRouter.put<{ propertyId: string; eventId: string }>(
   async (req, res) => {
     const property = await ownedProperty(req.params.propertyId, req.userId);
     if (!property) return res.status(404).json({ error: "Property not found" });
-    const { title, eventType, eventDate, description } = req.body;
+    const { title, eventType, eventDate, description, cost } = req.body;
     const existing = await prisma.timelineEvent.findFirst({
       where: { id: req.params.eventId, propertyId: req.params.propertyId },
     });
     if (!existing) return res.status(404).json({ error: "Event not found" });
+    const parsedCost = parseCost(cost);
     const event = await prisma.timelineEvent.update({
       where: { id: req.params.eventId },
       data: {
@@ -84,6 +93,7 @@ eventsRouter.put<{ propertyId: string; eventId: string }>(
         ...(eventType !== undefined ? { eventType } : {}),
         ...(eventDate !== undefined ? { eventDate: new Date(eventDate) } : {}),
         ...(description !== undefined ? { description: description || null } : {}),
+        ...(parsedCost !== undefined ? { cost: parsedCost } : {}),
       },
       include: { attachments: true },
     });

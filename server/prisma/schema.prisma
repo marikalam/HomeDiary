@@ -39,6 +39,7 @@ model TimelineEvent {
   eventType   String
   eventDate   DateTime
   description String?
+  cost        Decimal?     @db.Decimal(10, 2)
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   attachments Attachment[]

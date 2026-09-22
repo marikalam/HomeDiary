@@ -14,6 +14,7 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
   const [eventType, setEventType] = useState<string>("other");
   const [eventDate, setEventDate] = useState("");
   const [description, setDescription] = useState("");
+  const [cost, setCost] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,13 +41,20 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
     try {
       await createEvent(
         propertyId,
-        { title: title.trim(), eventType, eventDate, description: description.trim() },
+        {
+          title: title.trim(),
+          eventType,
+          eventDate,
+          description: description.trim(),
+          cost: cost.trim(),
+        },
         files
       );
       setTitle("");
       setEventType("other");
       setEventDate("");
       setDescription("");
+      setCost("");
       setFiles([]);
       setShowForm(false);
       load();
@@ -111,6 +119,17 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
               />
             </div>
           </div>
+          <label htmlFor="ev-cost">Cost</label>
+          <input
+            id="ev-cost"
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.01"
+            value={cost}
+            onChange={(e) => setCost(e.target.value)}
+            placeholder="Optional, e.g. 450.00"
+          />
           <label htmlFor="ev-desc">Notes</label>
           <textarea
             id="ev-desc"
@@ -151,6 +170,14 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
                     {formatDate(ev.eventDate)} <span className="badge">{ev.eventType}</span>
                   </div>
                   <h3 style={{ margin: "0.25rem 0" }}>{ev.title}</h3>
+                  {ev.cost && (
+                    <p className="muted" style={{ fontWeight: 600 }}>
+                      {Number(ev.cost).toLocaleString(undefined, {
+                        style: "currency",
+                        currency: "USD",
+                      })}
+                    </p>
+                  )}
                   {ev.description && <p className="muted">{ev.description}</p>}
                 </div>
                 <div className="item-actions">

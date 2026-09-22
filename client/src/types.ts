@@ -44,6 +44,7 @@ export interface TimelineEvent {
   eventType: string;
   eventDate: string;
   description: string | null;
+  cost: string | null;
   createdAt: string;
   updatedAt: string;
   attachments: Attachment[];

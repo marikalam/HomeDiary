@@ -83,6 +83,7 @@ export const createEvent = (
     eventType: string;
     eventDate: string;
     description?: string;
+    cost?: string;
   },
   files: File[]
 ) => {
@@ -91,6 +92,7 @@ export const createEvent = (
   form.append("eventType", data.eventType);
   form.append("eventDate", data.eventDate);
   if (data.description) form.append("description", data.description);
+  if (data.cost) form.append("cost", data.cost);
   files.forEach((f) => form.append("files", f));
   return apiFetch(`/api/properties/${propertyId}/events`, {
     method: "POST",
@@ -106,6 +108,7 @@ export const updateEvent = (
     eventType: string;
     eventDate: string;
     description: string;
+    cost: string;
   }>
 ) =>
   apiFetch(`/api/properties/${propertyId}/events/${eventId}`, {
