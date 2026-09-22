@@ -8,6 +8,7 @@ RUN npm run build
 
 # ---- Build server ----
 FROM node:20-alpine AS server-build
+RUN apk add --no-cache openssl
 WORKDIR /app/server
 COPY server/package*.json ./
 RUN npm ci
@@ -17,6 +18,7 @@ RUN npm run build
 
 # ---- Runtime ----
 FROM node:20-alpine
+RUN apk add --no-cache openssl
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=server-build /app/server/node_modules ./node_modules
