@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { createEvent, deleteEvent, getEvents } from "../api";
+import { createEvent, getEvents } from "../api";
 import { EVENT_TYPES } from "../types";
 import type { TimelineEvent } from "../types";
-import AttachmentList from "./AttachmentList";
-import { formatDate } from "../dateUtil";
+import TimelineEventItem from "./TimelineEventItem";
 
 export default function TimelineTab({ propertyId }: { propertyId: string }) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
@@ -63,12 +62,6 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this timeline event and its attachments?")) return;
-    await deleteEvent(propertyId, id);
-    load();
   }
 
   const sorted = [...events].sort(
@@ -163,31 +156,12 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
       ) : (
         <div className="timeline">
           {sorted.map((ev) => (
-            <div key={ev.id} className="timeline-item">
-              <div className="item-header">
-                <div>
-                  <div className="timeline-date">
-                    {formatDate(ev.eventDate)} <span className="badge">{ev.eventType}</span>
-                  </div>
-                  <h3 style={{ margin: "0.25rem 0" }}>{ev.title}</h3>
-                  {ev.cost && (
-                    <p className="muted" style={{ fontWeight: 600 }}>
-                      {Number(ev.cost).toLocaleString(undefined, {
-                        style: "currency",
-                        currency: "USD",
-                      })}
-                    </p>
-                  )}
-                  {ev.description && <p className="muted">{ev.description}</p>}
-                </div>
-                <div className="item-actions">
-                  <button className="danger" onClick={() => handleDelete(ev.id)}>
-                    Delete
-                  </button>
-                </div>
-              </div>
-              <AttachmentList attachments={ev.attachments} onChange={load} />
-            </div>
+            <TimelineEventItem
+              key={ev.id}
+              event={ev}
+              propertyId={propertyId}
+              onChange={load}
+            />
           ))}
         </div>
       )}
