@@ -7,6 +7,8 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -20,7 +22,7 @@ export default function AuthPage() {
       if (mode === "login") {
         await login(email, password);
       } else {
-        await register(email, password);
+        await register(email, password, firstName, lastName);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -34,6 +36,28 @@ export default function AuthPage() {
       <h1 style={{ textAlign: "center" }}>🏠 HomeDiary</h1>
       <form className="card" onSubmit={handleSubmit}>
         <h2 style={{ marginTop: 0 }}>{mode === "login" ? "Sign in" : "Create an account"}</h2>
+        {mode === "register" && (
+          <div className="form-row">
+            <div>
+              <label htmlFor="firstName">First name</label>
+              <input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label htmlFor="lastName">Last name</label>
+              <input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+        )}
         <label htmlFor="email">Email</label>
         <input
           id="email"

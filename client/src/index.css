@@ -28,9 +28,18 @@ body {
 }
 
 .app-header {
-  padding: 1rem 1.5rem;
+  padding: 0.85rem 1.5rem;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+}
+
+.app-header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 .brand {
@@ -38,6 +47,62 @@ body {
   font-weight: 700;
   color: var(--accent);
   text-decoration: none;
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.user-name {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.user-info button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.name-edit-form {
+  max-width: 900px;
+  margin: 0.6rem auto 0;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.name-edit-form input {
+  width: auto;
+  flex: 1;
+  min-width: 120px;
+}
+
+.name-edit-form button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .app-header {
+    padding: 0.65rem 1rem;
+  }
+  .brand {
+    font-size: 1.1rem;
+  }
+  .user-name {
+    max-width: 34vw;
+  }
+  .user-info button {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.85rem;
+  }
 }
 
 .app-main {

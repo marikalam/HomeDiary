@@ -16,11 +16,16 @@ async function handle<T>(res: Response): Promise<T> {
 // Auth
 export const getMe = () => apiFetch("/api/auth/me").then((r) => handle<AuthUser>(r));
 
-export const register = (email: string, password: string) =>
+export const register = (
+  email: string,
+  password: string,
+  firstName: string,
+  lastName: string
+) =>
   apiFetch("/api/auth/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, firstName, lastName }),
   }).then((r) => handle<AuthUser>(r));
 
 export const login = (email: string, password: string) =>
@@ -32,6 +37,13 @@ export const login = (email: string, password: string) =>
 
 export const logout = () =>
   apiFetch("/api/auth/logout", { method: "POST" }).then((r) => handle<void>(r));
+
+export const updateMe = (firstName: string, lastName: string) =>
+  apiFetch("/api/auth/me", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ firstName, lastName }),
+  }).then((r) => handle<AuthUser>(r));
 
 // Properties
 export const getProperties = () =>

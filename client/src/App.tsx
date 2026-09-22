@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { Navigate, Route, Routes, Link } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import PropertiesPage from "./pages/PropertiesPage";
 import PropertyPage from "./pages/PropertyPage";
 import AuthPage from "./pages/AuthPage";
+import Header from "./components/Header";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -10,35 +11,6 @@ function RequireAuth({ children }: { children: ReactNode }) {
   if (loading) return <p className="muted">Loading...</p>;
   if (!user) return <Navigate to="/login" replace />;
   return <>{children}</>;
-}
-
-function Header() {
-  const { user, logout } = useAuth();
-  return (
-    <header className="app-header">
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          maxWidth: 900,
-          margin: "0 auto",
-        }}
-      >
-        <Link to="/" className="brand">
-          🏠 HomeDiary
-        </Link>
-        {user && (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            <span className="muted">{user.email}</span>
-            <button className="secondary" onClick={() => logout()}>
-              Sign out
-            </button>
-          </div>
-        )}
-      </div>
-    </header>
-  );
 }
 
 export default function App() {

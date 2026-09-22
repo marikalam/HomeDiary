@@ -13,13 +13,33 @@ export const authRouter = Router();
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function publicUser(user: {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+}) {
+  return {
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+  };
+}
+
 authRouter.post("/register", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, firstName, lastName } = req.body;
   if (typeof email !== "string" || !EMAIL_RE.test(email)) {
     return res.status(400).json({ error: "A valid email is required" });
   }
   if (typeof password !== "string" || password.length < 8) {
     return res.status(400).json({ error: "Password must be at least 8 characters" });
+  }
+  if (typeof firstName !== "string" || !firstName.trim()) {
+    return res.status(400).json({ error: "First name is required" });
+  }
+  if (typeof lastName !== "string" || !lastName.trim()) {
+    return res.status(400).json({ error: "Last name is required" });
   }
   const normalizedEmail = email.trim().toLowerCase();
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
@@ -28,11 +48,16 @@ authRouter.post("/register", async (req, res) => {
   }
   const passwordHash = await hashPassword(password);
   const user = await prisma.user.create({
-    data: { email: normalizedEmail, passwordHash },
+    data: {
+      email: normalizedEmail,
+      passwordHash,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+    },
   });
   const token = signToken(user.id);
   res.cookie(COOKIE_NAME, token, cookieOptions());
-  res.status(201).json({ id: user.id, email: user.email });
+  res.status(201).json(publicUser(user));
 });
 
 authRouter.post("/login", async (req, res) => {
@@ -48,7 +73,7 @@ authRouter.post("/login", async (req, res) => {
   }
   const token = signToken(user.id);
   res.cookie(COOKIE_NAME, token, cookieOptions());
-  res.json({ id: user.id, email: user.email });
+  res.json(publicUser(user));
 });
 
 authRouter.post("/logout", (_req, res) => {
@@ -59,5 +84,20 @@ authRouter.post("/logout", (_req, res) => {
 authRouter.get("/me", requireAuth, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.userId } });
   if (!user) return res.status(401).json({ error: "Not signed in" });
-  res.json({ id: user.id, email: user.email });
+  res.json(publicUser(user));
+});
+
+authRouter.put("/me", requireAuth, async (req, res) => {
+  const { firstName, lastName } = req.body;
+  if (typeof firstName !== "string" || !firstName.trim()) {
+    return res.status(400).json({ error: "First name is required" });
+  }
+  if (typeof lastName !== "string" || !lastName.trim()) {
+    return res.status(400).json({ error: "Last name is required" });
+  }
+  const user = await prisma.user.update({
+    where: { id: req.userId },
+    data: { firstName: firstName.trim(), lastName: lastName.trim() },
+  });
+  res.json(publicUser(user));
 });
