@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  properties   Property[]
+}
+
+model Property {
+  id           String          @id @default(cuid())
+  userId       String
+  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  address      String?
+  purchaseDate DateTime?
+  notes        String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  events       TimelineEvent[]
+  documents    Document[]
+
+  @@index([userId])
+}
+
+model TimelineEvent {
+  id          String       @id @default(cuid())
+  propertyId  String
+  property    Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  title       String
+  eventType   String
+  eventDate   DateTime
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attachments Attachment[]
+
+  @@index([propertyId])
+}
+
+model Document {
+  id           String       @id @default(cuid())
+  propertyId   String
+  property     Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  title        String
+  category     String
+  documentDate DateTime?
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  attachments  Attachment[]
+
+  @@index([propertyId])
+}
+
+model Attachment {
+  id         String         @id @default(cuid())
+  filename   String
+  storedName String
+  mimeType   String
+  size       Int
+  createdAt  DateTime       @default(now())
+  eventId    String?
+  event      TimelineEvent? @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  documentId String?
+  document   Document?      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([documentId])
+}
