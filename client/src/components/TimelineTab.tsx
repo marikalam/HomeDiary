@@ -3,6 +3,7 @@ import { createEvent, getEvents } from "../api";
 import { EVENT_TYPES } from "../types";
 import type { TimelineEvent } from "../types";
 import TimelineEventItem from "./TimelineEventItem";
+import { todayISO } from "../dateUtil";
 
 export default function TimelineTab({ propertyId }: { propertyId: string }) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
@@ -11,7 +12,7 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
 
   const [title, setTitle] = useState("");
   const [eventType, setEventType] = useState<string>("other");
-  const [eventDate, setEventDate] = useState("");
+  const [eventDate, setEventDate] = useState(todayISO);
   const [description, setDescription] = useState("");
   const [cost, setCost] = useState("");
   const [files, setFiles] = useState<File[]>([]);
@@ -51,7 +52,7 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
       );
       setTitle("");
       setEventType("other");
-      setEventDate("");
+      setEventDate(todayISO());
       setDescription("");
       setCost("");
       setFiles([]);

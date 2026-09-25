@@ -3,7 +3,7 @@ import { createDocument, deleteDocument, getDocuments } from "../api";
 import { DOCUMENT_CATEGORIES } from "../types";
 import type { HomeDocument } from "../types";
 import AttachmentList from "./AttachmentList";
-import { formatDate } from "../dateUtil";
+import { formatDate, todayISO } from "../dateUtil";
 
 export default function DocumentsTab({ propertyId }: { propertyId: string }) {
   const [documents, setDocuments] = useState<HomeDocument[]>([]);
@@ -13,7 +13,7 @@ export default function DocumentsTab({ propertyId }: { propertyId: string }) {
 
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<string>("other");
-  const [documentDate, setDocumentDate] = useState("");
+  const [documentDate, setDocumentDate] = useState(todayISO);
   const [notes, setNotes] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +51,7 @@ export default function DocumentsTab({ propertyId }: { propertyId: string }) {
       );
       setTitle("");
       setCategory("other");
-      setDocumentDate("");
+      setDocumentDate(todayISO());
       setNotes("");
       setFiles([]);
       setShowForm(false);
