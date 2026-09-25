@@ -154,6 +154,36 @@ button.danger:hover {
   background: #953a30;
 }
 
+a.secondary {
+  display: inline-flex;
+  align-items: center;
+  font-family: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.secondary:hover {
+  background: var(--bg);
+}
+
+.google-status-banner {
+  margin: 0 1.5rem 0.85rem;
+  padding: 0.6rem 1rem;
+  background: #eef3ea;
+  border: 1px solid #c9d9bf;
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
 input, textarea, select {
   font-family: inherit;
   font-size: 0.95rem;
@@ -211,6 +241,40 @@ label {
   font-size: 0.75rem;
   text-transform: capitalize;
   color: var(--text-muted);
+}
+
+.badge-google {
+  margin-left: 0.4rem;
+  text-decoration: none;
+  text-transform: none;
+}
+
+.google-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.google-event-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 0.85rem;
+  color: var(--text);
+}
+
+.google-event-option:hover {
+  background: var(--bg);
+}
+
+.google-event-option .event-time {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
 }
 
 .tabs {

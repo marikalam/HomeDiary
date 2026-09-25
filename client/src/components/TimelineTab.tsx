@@ -1,9 +1,14 @@
 import { useEffect, useState } from "react";
-import { createEvent, getEvents } from "../api";
+import { createEvent, getEvents, getGoogleEvents, getGoogleStatus } from "../api";
 import { EVENT_TYPES } from "../types";
-import type { TimelineEvent } from "../types";
+import type { GoogleCalendarEvent, TimelineEvent } from "../types";
 import TimelineEventItem from "./TimelineEventItem";
 import { todayISO } from "../dateUtil";
+import Modal from "./Modal";
+
+function toDateInputValue(iso: string) {
+  return iso.slice(0, 10);
+}
 
 export default function TimelineTab({ propertyId }: { propertyId: string }) {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
@@ -19,8 +24,19 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  const [linkedGoogleEvent, setLinkedGoogleEvent] = useState<GoogleCalendarEvent | null>(null);
+
+  const [googleConnected, setGoogleConnected] = useState(false);
+  const [showGooglePicker, setShowGooglePicker] = useState(false);
+  const [googleEvents, setGoogleEvents] = useState<GoogleCalendarEvent[]>([]);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+
   useEffect(() => {
     load();
+    getGoogleStatus()
+      .then((s) => setGoogleConnected(s.connected))
+      .catch(() => {});
   }, [propertyId]);
 
   function load() {
@@ -28,6 +44,31 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
     getEvents(propertyId)
       .then(setEvents)
       .finally(() => setLoading(false));
+  }
+
+  function openGooglePicker() {
+    setShowGooglePicker(true);
+    setGoogleLoading(true);
+    setGoogleError(null);
+    // A week back through two weeks ahead covers "today's" events plus
+    // anything recent enough to still be worth linking after the fact.
+    const start = new Date();
+    start.setDate(start.getDate() - 7);
+    const end = new Date();
+    end.setDate(end.getDate() + 14);
+    getGoogleEvents(start.toISOString().slice(0, 10), end.toISOString().slice(0, 10))
+      .then(setGoogleEvents)
+      .catch((err) => setGoogleError(err instanceof Error ? err.message : "Failed to load Google Calendar events"))
+      .finally(() => setGoogleLoading(false));
+  }
+
+  function chooseGoogleEvent(ge: GoogleCalendarEvent) {
+    setTitle(ge.title);
+    setEventDate(toDateInputValue(ge.start));
+    setDescription(ge.description ?? "");
+    setLinkedGoogleEvent(ge);
+    setShowGooglePicker(false);
+    setShowForm(true);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -47,6 +88,9 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
           eventDate,
           description: description.trim(),
           cost: cost.trim(),
+          googleEventId: linkedGoogleEvent?.id,
+          googleCalendarId: linkedGoogleEvent ? "primary" : undefined,
+          googleHtmlLink: linkedGoogleEvent?.htmlLink,
         },
         files
       );
@@ -56,6 +100,7 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
       setDescription("");
       setCost("");
       setFiles([]);
+      setLinkedGoogleEvent(null);
       setShowForm(false);
       load();
     } catch (err) {
@@ -73,13 +118,66 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
     <div>
       <div className="item-header">
         <h2>Timeline</h2>
-        <button onClick={() => setShowForm((s) => !s)}>
-          {showForm ? "Cancel" : "+ Add Event"}
-        </button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          {googleConnected && (
+            <button className="secondary" onClick={openGooglePicker}>
+              📅 Import from Google Calendar
+            </button>
+          )}
+          <button
+            onClick={() => {
+              if (showForm) setLinkedGoogleEvent(null);
+              setShowForm((s) => !s);
+            }}
+          >
+            {showForm ? "Cancel" : "+ Add Event"}
+          </button>
+        </div>
       </div>
+
+      {showGooglePicker && (
+        <Modal title="Import from Google Calendar" onClose={() => setShowGooglePicker(false)}>
+          {googleLoading ? (
+            <p className="muted">Loading your calendar...</p>
+          ) : googleError ? (
+            <div className="error">{googleError}</div>
+          ) : googleEvents.length === 0 ? (
+            <p className="muted">No events found in the next two weeks (or past week).</p>
+          ) : (
+            <div className="google-event-list">
+              {googleEvents.map((ge) => (
+                <button
+                  key={ge.id}
+                  type="button"
+                  className="google-event-option"
+                  onClick={() => chooseGoogleEvent(ge)}
+                >
+                  <span className="event-time">
+                    {ge.allDay
+                      ? new Date(ge.start).toLocaleDateString()
+                      : new Date(ge.start).toLocaleString(undefined, {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
+                  </span>
+                  {ge.title}
+                </button>
+              ))}
+            </div>
+          )}
+        </Modal>
+      )}
 
       {showForm && (
         <form className="card" onSubmit={handleSubmit}>
+          {linkedGoogleEvent && (
+            <div className="google-status-banner" style={{ margin: "0 0 0.75rem" }}>
+              📅 Linked to "{linkedGoogleEvent.title}" from Google Calendar
+            </div>
+          )}
           <label htmlFor="ev-title">What happened</label>
           <input
             id="ev-title"

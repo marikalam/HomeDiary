@@ -47,9 +47,29 @@ export interface TimelineEvent {
   eventDate: string;
   description: string | null;
   cost: string | null;
+  googleEventId: string | null;
+  googleCalendarId: string | null;
+  googleHtmlLink: string | null;
   createdAt: string;
   updatedAt: string;
   attachments: Attachment[];
+}
+
+export interface GoogleCalendarStatus {
+  configured: boolean;
+  connected: boolean;
+  googleEmail: string | null;
+}
+
+export interface GoogleCalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  allDay: boolean;
+  description: string | null;
+  location: string | null;
+  htmlLink: string;
 }
 
 export const DOCUMENT_CATEGORIES = [

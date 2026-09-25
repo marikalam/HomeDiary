@@ -37,7 +37,8 @@ eventsRouter.post<{ propertyId: string }>(
   "/",
   upload.array("files", 20),
   async (req, res) => {
-    const { title, eventType, eventDate, description, cost } = req.body;
+    const { title, eventType, eventDate, description, cost, googleEventId, googleCalendarId, googleHtmlLink } =
+      req.body;
     if (!title || !eventDate) {
       return res.status(400).json({ error: "title and eventDate are required" });
     }
@@ -66,6 +67,9 @@ eventsRouter.post<{ propertyId: string }>(
         eventDate: new Date(eventDate),
         description: description || null,
         cost: parseCost(cost) ?? null,
+        googleEventId: googleEventId || null,
+        googleCalendarId: googleCalendarId || null,
+        googleHtmlLink: googleHtmlLink || null,
         attachments: { create: uploaded },
       },
       include: { attachments: true },

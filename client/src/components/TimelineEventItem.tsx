@@ -160,6 +160,17 @@ export default function TimelineEventItem({
         <div>
           <div className="timeline-date">
             {formatDate(event.eventDate)} <span className="badge">{event.eventType}</span>
+            {event.googleHtmlLink && (
+              <a
+                href={event.googleHtmlLink}
+                target="_blank"
+                rel="noreferrer"
+                className="badge badge-google"
+                title="View in Google Calendar"
+              >
+                📅 Google Calendar
+              </a>
+            )}
           </div>
           <h3 style={{ margin: "0.25rem 0" }}>{event.title}</h3>
           {event.cost && (

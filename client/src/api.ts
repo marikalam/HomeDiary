@@ -1,4 +1,11 @@
-import type { AuthUser, HomeDocument, Property, TimelineEvent } from "./types";
+import type {
+  AuthUser,
+  GoogleCalendarEvent,
+  GoogleCalendarStatus,
+  HomeDocument,
+  Property,
+  TimelineEvent,
+} from "./types";
 
 function apiFetch(input: string, init: RequestInit = {}) {
   return fetch(input, { ...init, credentials: "include" });
@@ -96,6 +103,9 @@ export const createEvent = (
     eventDate: string;
     description?: string;
     cost?: string;
+    googleEventId?: string;
+    googleCalendarId?: string;
+    googleHtmlLink?: string;
   },
   files: File[]
 ) => {
@@ -105,6 +115,9 @@ export const createEvent = (
   form.append("eventDate", data.eventDate);
   if (data.description) form.append("description", data.description);
   if (data.cost) form.append("cost", data.cost);
+  if (data.googleEventId) form.append("googleEventId", data.googleEventId);
+  if (data.googleCalendarId) form.append("googleCalendarId", data.googleCalendarId);
+  if (data.googleHtmlLink) form.append("googleHtmlLink", data.googleHtmlLink);
   files.forEach((f) => form.append("files", f));
   return apiFetch(`/api/properties/${propertyId}/events`, {
     method: "POST",
@@ -217,3 +230,17 @@ export const deleteAttachment = (attachmentId: string) =>
 
 export const attachmentUrl = (attachmentId: string) =>
   `/api/attachments/${attachmentId}/file`;
+
+// Google Calendar
+export const getGoogleStatus = () =>
+  apiFetch("/api/google/status").then((r) => handle<GoogleCalendarStatus>(r));
+
+export const connectGoogleUrl = () => "/api/google/connect";
+
+export const disconnectGoogle = () =>
+  apiFetch("/api/google/disconnect", { method: "POST" }).then((r) => handle<void>(r));
+
+export const getGoogleEvents = (start: string, end: string) =>
+  apiFetch(`/api/google/events?start=${start}&end=${end}`).then((r) =>
+    handle<GoogleCalendarEvent[]>(r)
+  );

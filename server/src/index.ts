@@ -8,6 +8,7 @@ import { propertiesRouter } from "./routes/properties";
 import { eventsRouter } from "./routes/events";
 import { documentsRouter } from "./routes/documents";
 import { attachmentsRouter } from "./routes/attachments";
+import { googleRouter } from "./routes/google";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -27,6 +28,7 @@ app.use("/api/properties", propertiesRouter);
 app.use("/api/properties/:propertyId/events", eventsRouter);
 app.use("/api/properties/:propertyId/documents", documentsRouter);
 app.use("/api/attachments", attachmentsRouter);
+app.use("/api/google", googleRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 

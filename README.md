@@ -6,6 +6,9 @@ with photos and documents attached, and keep separate, non-timeline
 documents (purchase paperwork, insurance policies, warranties) per property.
 Each account only ever sees its own properties.
 
+Optionally connect your Google Calendar (read-only) to import an event
+straight into a property's timeline — see [DEPLOY.md](DEPLOY.md#4-google-calendar-linking-optional).
+
 ## Stack
 
 - **Backend**: Node.js, Express, TypeScript, Prisma, Postgres, Cloudflare R2

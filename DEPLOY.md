@@ -52,6 +52,51 @@ shared with anyone; you'll paste them directly into Render's own setup form.
    Open it, click **Sign up**, and create your account. Every user only ever
    sees their own properties.
 
+## 4. Google Calendar linking (optional)
+
+This lets you connect your Google account so you can import a Google
+Calendar event (like "Fridge technician comes") straight into a property's
+timeline. Skip this section if you don't want that — the app works fine
+without it, the "Connect Google Calendar" button just won't appear.
+
+1. Go to [console.cloud.google.com](https://console.cloud.google.com) and
+   sign in with your Google account. Create a new project (top-left project
+   picker → **New Project**) — name it anything, e.g. `HomeDiary`.
+2. Go to **APIs & Services → Library**, search for **Google Calendar API**,
+   and click **Enable**.
+3. Go to **APIs & Services → OAuth consent screen**.
+   - User type: **External** (unless you have a Google Workspace account,
+     in which case Internal also works and is simpler).
+   - Fill in the app name (`HomeDiary`), your email for support and
+     developer contact, and save through the steps.
+   - On the **Scopes** step you can skip adding scopes here — the app
+     requests them directly.
+   - On the **Test users** step, add your own Google account's email. While
+     the app is in "Testing" mode, only accounts you add here can connect —
+     that's fine for personal use and avoids Google's full app review.
+4. Go to **APIs & Services → Credentials → Create Credentials → OAuth
+   client ID**.
+   - Application type: **Web application**.
+   - Name: anything, e.g. `HomeDiary server`.
+   - Under **Authorized redirect URIs**, add:
+     - `http://localhost:4000/api/google/callback` (for local dev)
+     - `https://<your-render-url>/api/google/callback` (your real deployed
+       URL from step 3 above, e.g. `https://homediary.onrender.com/api/google/callback`)
+   - Click **Create**. Copy the **Client ID** and **Client Secret** shown.
+5. In Render, add these environment variables (Dashboard → your service →
+   **Environment**):
+   - `GOOGLE_CLIENT_ID` → the Client ID from step 4
+   - `GOOGLE_CLIENT_SECRET` → the Client Secret from step 4
+   - `GOOGLE_REDIRECT_URI` → `https://<your-render-url>/api/google/callback`
+     (must match exactly what you added in step 4, including `https://`)
+   - Render will redeploy automatically after you save.
+6. For local dev, add the same three variables to `server/.env`, using the
+   `http://localhost:4000/...` redirect URI instead.
+7. Open HomeDiary, sign in, and you should see a **📅 Connect Google
+   Calendar** button next to your name. Connecting asks for read-only
+   calendar access — HomeDiary never edits or creates anything on your
+   Google Calendar, it only reads events so you can import one.
+
 ## Notes
 
 - The free Render instance sleeps after 15 minutes of no traffic; the first
