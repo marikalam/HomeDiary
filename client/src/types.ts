@@ -55,6 +55,10 @@ export interface TimelineEvent {
   attachments: Attachment[];
 }
 
+export interface TimelineEventSearchResult extends TimelineEvent {
+  score: number;
+}
+
 export interface GoogleCalendarStatus {
   configured: boolean;
   connected: boolean;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { createEvent, getEvents, getGoogleEvents, getGoogleStatus } from "../api";
+import { createEvent, getEvents, getGoogleEvents, getGoogleStatus, searchEvents } from "../api";
 import { EVENT_TYPES } from "../types";
-import type { GoogleCalendarEvent, TimelineEvent } from "../types";
+import type { GoogleCalendarEvent, TimelineEvent, TimelineEventSearchResult } from "../types";
 import TimelineEventItem from "./TimelineEventItem";
 import { todayISO } from "../dateUtil";
 import Modal from "./Modal";
@@ -32,12 +32,36 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<TimelineEventSearchResult[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
   useEffect(() => {
     load();
     getGoogleStatus()
       .then((s) => setGoogleConnected(s.connected))
       .catch(() => {});
   }, [propertyId]);
+
+  // Debounced semantic search - "fridge technician" will also find an
+  // event titled "Refrigerator repair", since matching is by meaning
+  // rather than exact words.
+  useEffect(() => {
+    const q = searchQuery.trim();
+    if (!q) {
+      setSearchResults(null);
+      setSearching(false);
+      return;
+    }
+    setSearching(true);
+    const timer = setTimeout(() => {
+      searchEvents(propertyId, q)
+        .then(setSearchResults)
+        .catch(() => setSearchResults([]))
+        .finally(() => setSearching(false));
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery, propertyId]);
 
   function load() {
     setLoading(true);
@@ -133,6 +157,17 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
             {showForm ? "Cancel" : "+ Add Event"}
           </button>
         </div>
+      </div>
+
+      <div className="search-bar">
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search events by what happened, e.g. 'fridge repair'"
+          aria-label="Search timeline events"
+        />
+        {searching && <span className="muted search-status">Searching...</span>}
       </div>
 
       {showGooglePicker && (
@@ -246,7 +281,24 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
         </form>
       )}
 
-      {loading ? (
+      {searchResults !== null ? (
+        searchResults.length === 0 ? (
+          <div className="empty-state">
+            <p>No events match "{searchQuery.trim()}".</p>
+          </div>
+        ) : (
+          <div className="timeline">
+            {searchResults.map((ev) => (
+              <TimelineEventItem
+                key={ev.id}
+                event={ev}
+                propertyId={propertyId}
+                onChange={load}
+              />
+            ))}
+          </div>
+        )
+      ) : loading ? (
         <p className="muted">Loading...</p>
       ) : sorted.length === 0 ? (
         <div className="empty-state">

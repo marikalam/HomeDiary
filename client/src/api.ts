@@ -5,6 +5,7 @@ import type {
   HomeDocument,
   Property,
   TimelineEvent,
+  TimelineEventSearchResult,
 } from "./types";
 
 function apiFetch(input: string, init: RequestInit = {}) {
@@ -93,6 +94,11 @@ export const deleteProperty = (id: string) =>
 export const getEvents = (propertyId: string) =>
   apiFetch(`/api/properties/${propertyId}/events`).then((r) =>
     handle<TimelineEvent[]>(r)
+  );
+
+export const searchEvents = (propertyId: string, q: string) =>
+  apiFetch(`/api/properties/${propertyId}/events/search?q=${encodeURIComponent(q)}`).then((r) =>
+    handle<TimelineEventSearchResult[]>(r)
   );
 
 export const createEvent = (

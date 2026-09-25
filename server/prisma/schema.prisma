@@ -58,6 +58,7 @@ model TimelineEvent {
   googleEventId    String?
   googleCalendarId String?
   googleHtmlLink   String?
+  embedding        Float[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
   attachments      Attachment[]

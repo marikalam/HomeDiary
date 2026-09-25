@@ -7,8 +7,11 @@ COPY client/ ./
 RUN npm run build
 
 # ---- Build server ----
-FROM node:20-alpine AS server-build
-RUN apk add --no-cache openssl
+# Debian-based (not alpine) because semantic search pulls in onnxruntime-node
+# for local embeddings, whose prebuilt native binary targets glibc - it
+# doesn't run on musl libc (alpine).
+FROM node:20-slim AS server-build
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app/server
 COPY server/package*.json ./
 RUN npm ci
@@ -17,8 +20,8 @@ RUN npx prisma generate
 RUN npm run build
 
 # ---- Runtime ----
-FROM node:20-alpine
-RUN apk add --no-cache openssl
+FROM node:20-slim
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 ENV NODE_ENV=production
 COPY --from=server-build /app/server/node_modules ./node_modules

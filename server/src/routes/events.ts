@@ -4,6 +4,7 @@ import { prisma } from "../db";
 import { requireAuth } from "../auth";
 import { upload } from "../upload";
 import { deleteObject, putObject } from "../storage";
+import { cosineSimilarity, embedText, eventEmbeddingText } from "../embeddings";
 
 export const eventsRouter = Router({ mergeParams: true });
 
@@ -30,6 +31,45 @@ eventsRouter.get<{ propertyId: string }>("/", async (req, res) => {
     orderBy: { eventDate: "desc" },
   });
   res.json(events);
+});
+
+// GET /api/properties/:propertyId/events/search?q=...
+// Semantic search over event title/type/description, using local sentence
+// embeddings (no external API) and cosine similarity - so "fridge repair"
+// finds an event titled "Refrigerator technician visit" even with no
+// words in common.
+eventsRouter.get<{ propertyId: string }>("/search", async (req, res) => {
+  const q = typeof req.query.q === "string" ? req.query.q.trim() : "";
+  if (!q) return res.json([]);
+  const property = await ownedProperty(req.params.propertyId, req.userId);
+  if (!property) return res.status(404).json({ error: "Property not found" });
+
+  const events = await prisma.timelineEvent.findMany({
+    where: { propertyId: req.params.propertyId },
+    include: { attachments: true },
+  });
+
+  // Self-healing backfill: events created before this feature (or by any
+  // path that skipped embedding generation) get one computed on first
+  // search rather than needing a separate migration script.
+  const withEmbeddings = await Promise.all(
+    events.map(async (event) => {
+      if (event.embedding.length > 0) return event;
+      const embedding = await embedText(eventEmbeddingText(event));
+      await prisma.timelineEvent.update({ where: { id: event.id }, data: { embedding } });
+      return { ...event, embedding };
+    })
+  );
+
+  const queryEmbedding = await embedText(q);
+  const MIN_SCORE = 0.25;
+  const ranked = withEmbeddings
+    .map((event) => ({ event, score: cosineSimilarity(queryEmbedding, event.embedding) }))
+    .filter((r) => r.score >= MIN_SCORE)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 20);
+
+  res.json(ranked.map((r) => ({ ...r.event, score: r.score })));
 });
 
 // POST /api/properties/:propertyId/events  (multipart, field "files")
@@ -59,6 +99,10 @@ eventsRouter.post<{ propertyId: string }>(
       })
     );
 
+    const embedding = await embedText(
+      eventEmbeddingText({ title, eventType: eventType || "other", description })
+    );
+
     const event = await prisma.timelineEvent.create({
       data: {
         propertyId: req.params.propertyId,
@@ -70,6 +114,7 @@ eventsRouter.post<{ propertyId: string }>(
         googleEventId: googleEventId || null,
         googleCalendarId: googleCalendarId || null,
         googleHtmlLink: googleHtmlLink || null,
+        embedding,
         attachments: { create: uploaded },
       },
       include: { attachments: true },
@@ -90,6 +135,20 @@ eventsRouter.put<{ propertyId: string; eventId: string }>(
     });
     if (!existing) return res.status(404).json({ error: "Event not found" });
     const parsedCost = parseCost(cost);
+
+    // Re-embed whenever any of the searchable text fields change, so the
+    // stored vector never drifts out of sync with what's actually shown.
+    const textChanged = title !== undefined || eventType !== undefined || description !== undefined;
+    const embedding = textChanged
+      ? await embedText(
+          eventEmbeddingText({
+            title: title ?? existing.title,
+            eventType: eventType ?? existing.eventType,
+            description: description !== undefined ? description : existing.description,
+          })
+        )
+      : undefined;
+
     const event = await prisma.timelineEvent.update({
       where: { id: req.params.eventId },
       data: {
@@ -98,6 +157,7 @@ eventsRouter.put<{ propertyId: string; eventId: string }>(
         ...(eventDate !== undefined ? { eventDate: new Date(eventDate) } : {}),
         ...(description !== undefined ? { description: description || null } : {}),
         ...(parsedCost !== undefined ? { cost: parsedCost } : {}),
+        ...(embedding !== undefined ? { embedding } : {}),
       },
       include: { attachments: true },
     });
