@@ -5,6 +5,10 @@ function isImage(mimeType: string) {
   return mimeType.startsWith("image/");
 }
 
+function isVideo(mimeType: string) {
+  return mimeType.startsWith("video/");
+}
+
 export default function AttachmentList({
   attachments,
   onChange,
@@ -12,7 +16,9 @@ export default function AttachmentList({
   attachments: Attachment[];
   onChange: () => void;
 }) {
-  if (attachments.length === 0) return null;
+  if (attachments.length === 0) {
+    return <p className="muted">No files attached yet.</p>;
+  }
 
   async function handleRemove(id: string) {
     if (!confirm("Remove this file?")) return;
@@ -21,27 +27,27 @@ export default function AttachmentList({
   }
 
   return (
-    <div className="attachment-list">
+    <div className="attachment-gallery">
       {attachments.map((a) => (
-        <a
-          key={a.id}
-          className="attachment-chip"
-          href={attachmentUrl(a.id)}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {isImage(a.mimeType) ? "🖼️" : "📄"} {a.filename}
-          <span
-            className="remove"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleRemove(a.id);
-            }}
-          >
-            ×
-          </span>
-        </a>
+        <div key={a.id} className="attachment-gallery-item">
+          <a href={attachmentUrl(a.id)} target="_blank" rel="noreferrer">
+            {isImage(a.mimeType) ? (
+              <img src={attachmentUrl(a.id)} alt={a.filename} />
+            ) : isVideo(a.mimeType) ? (
+              <video src={attachmentUrl(a.id)} controls />
+            ) : (
+              <div className="attachment-file-icon">📄</div>
+            )}
+          </a>
+          <div className="attachment-gallery-caption">
+            <a href={attachmentUrl(a.id)} target="_blank" rel="noreferrer" title={a.filename}>
+              {a.filename}
+            </a>
+            <button className="danger" onClick={() => handleRemove(a.id)}>
+              Remove
+            </button>
+          </div>
+        </div>
       ))}
     </div>
   );

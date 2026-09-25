@@ -2,7 +2,7 @@ import { useState } from "react";
 import { addEventAttachments, deleteEvent, updateEvent } from "../api";
 import { EVENT_TYPES } from "../types";
 import type { TimelineEvent } from "../types";
-import AttachmentList from "./AttachmentList";
+import AttachmentsButton from "./AttachmentsButton";
 import { formatDate } from "../dateUtil";
 
 export default function TimelineEventItem({
@@ -130,7 +130,11 @@ export default function TimelineEventItem({
             multiple
             onChange={(e) => setNewFiles(Array.from(e.target.files || []))}
           />
-          <AttachmentList attachments={event.attachments} onChange={onChange} />
+          <AttachmentsButton
+            attachments={event.attachments}
+            onChange={onChange}
+            label="Existing files"
+          />
           {error && <div className="error">{error}</div>}
           <div className="form-actions">
             <button type="submit" disabled={submitting}>
@@ -177,7 +181,7 @@ export default function TimelineEventItem({
           </button>
         </div>
       </div>
-      <AttachmentList attachments={event.attachments} onChange={onChange} />
+      <AttachmentsButton attachments={event.attachments} onChange={onChange} />
     </div>
   );
 }

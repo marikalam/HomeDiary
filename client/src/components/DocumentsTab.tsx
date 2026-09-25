@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createDocument, deleteDocument, getDocuments } from "../api";
 import { DOCUMENT_CATEGORIES } from "../types";
 import type { HomeDocument } from "../types";
-import AttachmentList from "./AttachmentList";
+import AttachmentsButton from "./AttachmentsButton";
 import { formatDate, todayISO } from "../dateUtil";
 
 export default function DocumentsTab({ propertyId }: { propertyId: string }) {
@@ -190,7 +190,7 @@ export default function DocumentsTab({ propertyId }: { propertyId: string }) {
                   </button>
                 </div>
               </div>
-              <AttachmentList attachments={doc.attachments} onChange={load} />
+              <AttachmentsButton attachments={doc.attachments} onChange={load} />
             </div>
           ))}
         </div>
