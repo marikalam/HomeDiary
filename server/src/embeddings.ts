@@ -1,16 +1,21 @@
-import { pipeline, type FeatureExtractionPipeline } from "@huggingface/transformers";
+import type { FeatureExtractionPipeline } from "@huggingface/transformers";
 
 // A small (~90MB, cached after first download), fast sentence-embedding
 // model that runs fully locally - no API key, no per-query cost, no
-// external service. Loaded lazily on first use so server boot/health
-// checks aren't slowed down by it, and cached for the life of the process.
+// external service. The package itself (not just the model) is loaded
+// lazily via dynamic import: it pulls in onnxruntime-node, a ~300MB native
+// module, and a static top-level import would make every route file that
+// touches this one pull that in at server boot - slowing/loading it even
+// for requests (or a health check) that never need an embedding.
 const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
 
 let extractorPromise: Promise<FeatureExtractionPipeline> | null = null;
 
 function getExtractor() {
   if (!extractorPromise) {
-    extractorPromise = pipeline("feature-extraction", MODEL_ID);
+    extractorPromise = import("@huggingface/transformers").then(({ pipeline }) =>
+      pipeline("feature-extraction", MODEL_ID)
+    );
   }
   return extractorPromise;
 }
