@@ -4,6 +4,7 @@ import { deleteProperty, getProperty, updateProperty } from "../api";
 import type { Property } from "../types";
 import TimelineTab from "../components/TimelineTab";
 import DocumentsTab from "../components/DocumentsTab";
+import ExportMenu from "../components/ExportMenu";
 import { formatDate } from "../dateUtil";
 
 export default function PropertyPage() {
@@ -103,6 +104,7 @@ export default function PropertyPage() {
             {property.notes && <p className="muted">{property.notes}</p>}
           </div>
           <div className="item-actions">
+            <ExportMenu propertyId={propertyId} />
             <button className="secondary" onClick={() => setEditing(true)}>
               Edit
             </button>

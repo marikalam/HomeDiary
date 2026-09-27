@@ -9,6 +9,10 @@ Each account only ever sees its own properties.
 Optionally connect your Google Calendar (read-only) to import an event
 straight into a property's timeline — see [DEPLOY.md](DEPLOY.md#4-google-calendar-linking-optional).
 
+Each property can be exported from its **Export** menu: an Excel workbook
+(summary, timeline with a cost total, and documents sheets) or a CSV of the
+timeline or the documents.
+
 ## Stack
 
 - **Backend**: Node.js, Express, TypeScript, Prisma, Postgres, Cloudflare R2

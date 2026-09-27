@@ -9,6 +9,7 @@ import { eventsRouter } from "./routes/events";
 import { documentsRouter } from "./routes/documents";
 import { attachmentsRouter } from "./routes/attachments";
 import { googleRouter } from "./routes/google";
+import { exportRouter } from "./routes/export";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -27,6 +28,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/properties", propertiesRouter);
 app.use("/api/properties/:propertyId/events", eventsRouter);
 app.use("/api/properties/:propertyId/documents", documentsRouter);
+app.use("/api/properties/:propertyId/export", exportRouter);
 app.use("/api/attachments", attachmentsRouter);
 app.use("/api/google", googleRouter);
 

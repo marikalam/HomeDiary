@@ -90,6 +90,14 @@ export const updateProperty = (
 export const deleteProperty = (id: string) =>
   apiFetch(`/api/properties/${id}`, { method: "DELETE" }).then((r) => handle<void>(r));
 
+// Plain download links - the browser sends the session cookie with them
+export const propertyExportUrl = (
+  id: string,
+  format: "xlsx" | "csv",
+  section?: "timeline" | "documents"
+) =>
+  `/api/properties/${id}/export?format=${format}` + (section ? `&section=${section}` : "");
+
 // Timeline events
 export const getEvents = (propertyId: string) =>
   apiFetch(`/api/properties/${propertyId}/events`).then((r) =>

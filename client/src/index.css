@@ -462,6 +462,45 @@ label {
   font-size: 0.8rem;
 }
 
+.export-menu {
+  position: relative;
+}
+
+.export-menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 10;
+  min-width: 13rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.3rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px -8px rgba(43, 38, 32, 0.25);
+}
+
+.export-menu-list a {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0.65rem;
+  border-radius: 6px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.export-menu-list a:hover,
+.export-menu-list a:focus-visible {
+  background: var(--bg);
+}
+
+.export-menu-list small {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
 .error {
   color: var(--danger);
   font-size: 0.9rem;
