@@ -1,5 +1,6 @@
 import type {
   AuthUser,
+  EventDraft,
   GoogleCalendarEvent,
   GoogleCalendarStatus,
   HomeDocument,
@@ -139,6 +140,23 @@ export const createEvent = (
   }).then((r) => handle<TimelineEvent>(r));
 };
 
+// Asks Claude to draft an event from photos. Nothing is saved - the draft
+// only prefills the Add Event form.
+export const analyzeEventPhotos = (
+  propertyId: string,
+  photos: Blob[],
+  context: { eventDate?: string; notes?: string } = {}
+) => {
+  const form = new FormData();
+  photos.forEach((p, i) => form.append("photos", p, `photo-${i + 1}.jpg`));
+  if (context.eventDate) form.append("eventDate", context.eventDate);
+  if (context.notes) form.append("notes", context.notes);
+  return apiFetch(`/api/properties/${propertyId}/events/analyze`, {
+    method: "POST",
+    body: form,
+  }).then((r) => handle<EventDraft>(r));
+};
+
 export const updateEvent = (
   propertyId: string,
   eventId: string,
@@ -244,6 +262,10 @@ export const deleteAttachment = (attachmentId: string) =>
 
 export const attachmentUrl = (attachmentId: string) =>
   `/api/attachments/${attachmentId}/file`;
+
+// Claude photo analysis
+export const getAiStatus = () =>
+  apiFetch("/api/ai/status").then((r) => handle<{ configured: boolean }>(r));
 
 // Google Calendar
 export const getGoogleStatus = () =>

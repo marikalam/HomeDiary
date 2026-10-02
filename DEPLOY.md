@@ -97,6 +97,31 @@ without it, the "Connect Google Calendar" button just won't appear.
    calendar access — HomeDiary never edits or creates anything on your
    Google Calendar, it only reads events so you can import one.
 
+## 5. Claude photo analysis (optional)
+
+This adds a **✨ Add from photos** button to each property's timeline. Pick
+one or more photos (up to 10 are analyzed) and Claude drafts the event for
+you: a title, the event type, a short summary, and a list of details it can
+see — appliance brand/model, what work is being done and where, damage or
+wear, readable labels or receipt totals. The original photos are attached to
+the event, and nothing is saved until you review the draft and click
+**Save event**. Skip this section if you don't want it — the button just
+won't appear.
+
+1. Go to [platform.claude.com](https://platform.claude.com), sign in, and
+   add a payment method under **Billing** (the API is pay-as-you-go; a
+   typical photo analysis costs a few cents).
+2. Go to **Settings → API Keys → Create Key**, name it `HomeDiary`, and copy
+   the key (starts with `sk-ant-`). It's only shown once.
+3. In Render, add an environment variable (Dashboard → your service →
+   **Environment**): `ANTHROPIC_API_KEY` → the key from step 2. Render
+   redeploys automatically after you save.
+4. For local dev, add the same variable to `server/.env`.
+
+Photos are downscaled in your browser before being sent to Claude, so
+large phone photos analyze quickly. Photos are only sent to Anthropic's API when
+you use the button.
+
 ## Notes
 
 - The free Render instance sleeps after 15 minutes of no traffic; the first

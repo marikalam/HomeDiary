@@ -10,6 +10,7 @@ import { documentsRouter } from "./routes/documents";
 import { attachmentsRouter } from "./routes/attachments";
 import { googleRouter } from "./routes/google";
 import { exportRouter } from "./routes/export";
+import { isAiConfigured } from "./ai";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -33,6 +34,7 @@ app.use("/api/attachments", attachmentsRouter);
 app.use("/api/google", googleRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
+app.get("/api/ai/status", (_req, res) => res.json({ configured: isAiConfigured() }));
 
 // Serve the built React app when it's present (single-service production deploy)
 const clientDist = path.join(__dirname, "..", "public");

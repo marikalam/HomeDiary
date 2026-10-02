@@ -9,6 +9,13 @@ Each account only ever sees its own properties.
 Optionally connect your Google Calendar (read-only) to import an event
 straight into a property's timeline — see [DEPLOY.md](DEPLOY.md#4-google-calendar-linking-optional).
 
+Optionally connect Claude to turn photos into timeline events: click
+**✨ Add from photos** on a property's timeline, pick your photos, and Claude
+fills in the title, type, a summary and the details it can read from them
+(appliance brands, what work was done, visible damage...). The photos are
+attached, and you review the draft before saving — see
+[DEPLOY.md](DEPLOY.md#5-claude-photo-analysis-optional).
+
 Each property can be exported from its **Export** menu: an Excel workbook
 (summary, timeline with a cost total, and documents sheets) or a CSV of the
 timeline or the documents.
@@ -57,6 +64,7 @@ server/            Express API + Prisma schema
   src/routes/            REST endpoints (auth, properties, events, documents, attachments)
   src/auth.ts            Password hashing, JWT sessions, requireAuth middleware
   src/storage.ts         Cloudflare R2 (S3-compatible) file storage
+  src/ai.ts              Claude photo analysis (drafts events from photos)
 client/            React app
   src/auth/               Auth context (login/register/logout, session check)
   src/pages/              AuthPage, PropertiesPage, PropertyPage
