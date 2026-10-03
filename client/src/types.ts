@@ -59,6 +59,14 @@ export interface TimelineEventSearchResult extends TimelineEvent {
   score: number;
 }
 
+// A Claude-drafted event from photos, used to prefill the Add Event form
+export interface EventDraft {
+  title: string;
+  eventType: EventType;
+  description: string;
+  cost: number | null;
+}
+
 export interface GoogleCalendarStatus {
   configured: boolean;
   connected: boolean;

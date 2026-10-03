@@ -5,6 +5,7 @@ import { requireAuth } from "../auth";
 import { upload } from "../upload";
 import { deleteObject, putObject } from "../storage";
 import { cosineSimilarity, embedText, eventEmbeddingText } from "../embeddings";
+import { PhotoAnalysisError, draftEventFromPhotos, isAiConfigured, isAnalyzableImage } from "../ai";
 
 export const eventsRouter = Router({ mergeParams: true });
 
@@ -71,6 +72,50 @@ eventsRouter.get<{ propertyId: string }>("/search", async (req, res) => {
 
   res.json(ranked.map((r) => ({ ...r.event, score: r.score })));
 });
+
+// POST /api/properties/:propertyId/events/analyze  (multipart, field "photos")
+// Asks Claude to draft an event (title, type, summary, cost) from photos.
+// Nothing is saved here - the client prefills the Add Event form with the
+// draft so the user can review it, then saves through the normal endpoint.
+const MAX_ANALYZE_PHOTOS = 10;
+const MAX_ANALYZE_PHOTO_BYTES = 5 * 1024 * 1024; // Claude API per-image limit
+
+eventsRouter.post<{ propertyId: string }>(
+  "/analyze",
+  upload.array("photos", MAX_ANALYZE_PHOTOS),
+  async (req, res) => {
+    if (!isAiConfigured()) {
+      return res.status(503).json({ error: "Photo analysis isn't set up on this server" });
+    }
+    const property = await ownedProperty(req.params.propertyId, req.userId);
+    if (!property) return res.status(404).json({ error: "Property not found" });
+
+    const photos = ((req.files as Express.Multer.File[]) || []).filter(
+      (f) => isAnalyzableImage(f.mimetype) && f.size <= MAX_ANALYZE_PHOTO_BYTES
+    );
+    if (photos.length === 0) {
+      return res.status(400).json({ error: "Add at least one JPEG, PNG, GIF or WebP photo" });
+    }
+
+    try {
+      const draft = await draftEventFromPhotos(
+        photos.map((f) => ({ data: f.buffer, mediaType: f.mimetype as "image/jpeg" })),
+        {
+          propertyName: property.name,
+          address: property.address,
+          eventDate: typeof req.body.eventDate === "string" ? req.body.eventDate : undefined,
+          notes: typeof req.body.notes === "string" ? req.body.notes.trim() || undefined : undefined,
+        }
+      );
+      res.json(draft);
+    } catch (err) {
+      console.error("Photo analysis failed", err);
+      res.status(502).json({
+        error: err instanceof PhotoAnalysisError ? err.message : "Photo analysis failed - please try again",
+      });
+    }
+  }
+);
 
 // POST /api/properties/:propertyId/events  (multipart, field "files")
 eventsRouter.post<{ propertyId: string }>(

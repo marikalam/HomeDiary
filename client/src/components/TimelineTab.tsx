@@ -1,9 +1,18 @@
-import { useEffect, useState } from "react";
-import { createEvent, getEvents, getGoogleEvents, getGoogleStatus, searchEvents } from "../api";
+import { useEffect, useRef, useState } from "react";
+import {
+  analyzeEventPhotos,
+  createEvent,
+  getAiStatus,
+  getEvents,
+  getGoogleEvents,
+  getGoogleStatus,
+  searchEvents,
+} from "../api";
 import { EVENT_TYPES } from "../types";
 import type { GoogleCalendarEvent, TimelineEvent, TimelineEventSearchResult } from "../types";
 import TimelineEventItem from "./TimelineEventItem";
 import { todayISO } from "../dateUtil";
+import { downscaleForAnalysis } from "../imageUtil";
 import Modal from "./Modal";
 
 function toDateInputValue(iso: string) {
@@ -32,6 +41,13 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState<string | null>(null);
 
+  const [aiConfigured, setAiConfigured] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  // Number of photos Claude drafted the open form from, or null if the
+  // form wasn't drafted from photos
+  const [aiDraftPhotoCount, setAiDraftPhotoCount] = useState<number | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<TimelineEventSearchResult[] | null>(null);
   const [searching, setSearching] = useState(false);
@@ -40,6 +56,9 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
     load();
     getGoogleStatus()
       .then((s) => setGoogleConnected(s.connected))
+      .catch(() => {});
+    getAiStatus()
+      .then((s) => setAiConfigured(s.configured))
       .catch(() => {});
   }, [propertyId]);
 
@@ -95,6 +114,49 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
     setShowForm(true);
   }
 
+  function resetForm() {
+    setTitle("");
+    setEventType("other");
+    setEventDate(todayISO());
+    setDescription("");
+    setCost("");
+    setFiles([]);
+    setLinkedGoogleEvent(null);
+    setAiDraftPhotoCount(null);
+    setError(null);
+  }
+
+  // Photos -> Claude -> prefilled form. The chosen photos are attached to
+  // the event as-is; only smaller copies are sent for analysis.
+  async function draftFromPhotos(selected: File[]) {
+    if (selected.length === 0) return;
+    resetForm();
+    setFiles(selected);
+    setShowForm(true);
+    setAnalyzing(true);
+    try {
+      const scaled = (await Promise.all(selected.slice(0, 10).map(downscaleForAnalysis))).filter(
+        (b): b is Blob => b !== null
+      );
+      if (scaled.length === 0) {
+        throw new Error("Couldn't read these photos - try JPEG or PNG images");
+      }
+      const draft = await analyzeEventPhotos(propertyId, scaled, { eventDate: todayISO() });
+      setTitle(draft.title);
+      setEventType(draft.eventType);
+      setDescription(draft.description);
+      setCost(draft.cost != null ? draft.cost.toFixed(2) : "");
+      setAiDraftPhotoCount(scaled.length);
+    } catch (err) {
+      setError(
+        (err instanceof Error ? err.message : "Photo analysis failed") +
+          " - the photos are still attached, so you can fill in the details yourself."
+      );
+    } finally {
+      setAnalyzing(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -118,13 +180,7 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
         },
         files
       );
-      setTitle("");
-      setEventType("other");
-      setEventDate(todayISO());
-      setDescription("");
-      setCost("");
-      setFiles([]);
-      setLinkedGoogleEvent(null);
+      resetForm();
       setShowForm(false);
       load();
     } catch (err) {
@@ -148,9 +204,31 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
               📅 Import from Google Calendar
             </button>
           )}
+          {aiConfigured && (
+            <>
+              <button
+                className="secondary"
+                disabled={analyzing}
+                onClick={() => photoInputRef.current?.click()}
+              >
+                ✨ Add from photos
+              </button>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                hidden
+                onChange={(e) => {
+                  draftFromPhotos(Array.from(e.target.files || []));
+                  e.target.value = "";
+                }}
+              />
+            </>
+          )}
           <button
             onClick={() => {
-              if (showForm) setLinkedGoogleEvent(null);
+              if (showForm) resetForm();
               setShowForm((s) => !s);
             }}
           >
@@ -208,6 +286,17 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
 
       {showForm && (
         <form className="card" onSubmit={handleSubmit}>
+          {analyzing && (
+            <div className="google-status-banner" style={{ margin: "0 0 0.75rem" }}>
+              ✨ Claude is looking at your {files.length === 1 ? "photo" : `${files.length} photos`}...
+            </div>
+          )}
+          {!analyzing && aiDraftPhotoCount !== null && (
+            <div className="google-status-banner" style={{ margin: "0 0 0.75rem" }}>
+              ✨ Drafted by Claude from {aiDraftPhotoCount === 1 ? "1 photo" : `${aiDraftPhotoCount} photos`} -
+              check the details before saving
+            </div>
+          )}
           {linkedGoogleEvent && (
             <div className="google-status-banner" style={{ margin: "0 0 0.75rem" }}>
               📅 Linked to "{linkedGoogleEvent.title}" from Google Calendar
@@ -272,9 +361,14 @@ export default function TimelineTab({ propertyId }: { propertyId: string }) {
             multiple
             onChange={(e) => setFiles(Array.from(e.target.files || []))}
           />
+          {files.length > 0 && (
+            <p className="muted" style={{ margin: "0.25rem 0 0" }}>
+              Attaching: {files.map((f) => f.name).join(", ")}
+            </p>
+          )}
           {error && <div className="error">{error}</div>}
           <div className="form-actions">
-            <button type="submit" disabled={submitting}>
+            <button type="submit" disabled={submitting || analyzing}>
               {submitting ? "Saving..." : "Save event"}
             </button>
           </div>
