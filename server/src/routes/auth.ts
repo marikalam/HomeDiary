@@ -1,8 +1,10 @@
 import { Router } from "express";
+import type { NextFunction, Request, Response } from "express";
 import { prisma } from "../db";
 import {
   COOKIE_NAME,
   cookieOptions,
+  generateApiToken,
   hashPassword,
   requireAuth,
   signToken,
@@ -100,4 +102,42 @@ authRouter.put("/me", requireAuth, async (req, res) => {
     data: { firstName: firstName.trim(), lastName: lastName.trim() },
   });
   res.json(publicUser(user));
+});
+
+// Personal API tokens. Managed only from a signed-in browser session, so a
+// token can't be used to mint more tokens or to see the others.
+function requireSession(req: Request, res: Response, next: NextFunction) {
+  if (req.authMethod !== "session") {
+    return res.status(403).json({ error: "Manage API tokens from the HomeDiary website" });
+  }
+  next();
+}
+
+authRouter.get("/tokens", requireAuth, requireSession, async (req, res) => {
+  const tokens = await prisma.apiToken.findMany({
+    where: { userId: req.userId },
+    select: { id: true, name: true, lastUsedAt: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  res.json(tokens);
+});
+
+// The plaintext token is only ever returned here, once.
+authRouter.post("/tokens", requireAuth, requireSession, async (req, res) => {
+  const name =
+    typeof req.body.name === "string" && req.body.name.trim() ? req.body.name.trim().slice(0, 100) : "Claude";
+  const { token, tokenHash } = generateApiToken();
+  const created = await prisma.apiToken.create({
+    data: { userId: req.userId!, name, tokenHash },
+    select: { id: true, name: true, lastUsedAt: true, createdAt: true },
+  });
+  res.status(201).json({ ...created, token });
+});
+
+authRouter.delete("/tokens/:tokenId", requireAuth, requireSession, async (req, res) => {
+  const { count } = await prisma.apiToken.deleteMany({
+    where: { id: req.params.tokenId, userId: req.userId },
+  });
+  if (count === 0) return res.status(404).json({ error: "Token not found" });
+  res.status(204).end();
 });

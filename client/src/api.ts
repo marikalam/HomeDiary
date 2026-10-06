@@ -1,4 +1,5 @@
 import type {
+  ApiToken,
   AuthUser,
   EventDraft,
   GoogleCalendarEvent,
@@ -53,6 +54,20 @@ export const updateMe = (firstName: string, lastName: string) =>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ firstName, lastName }),
   }).then((r) => handle<AuthUser>(r));
+
+// Personal API tokens (for connecting Claude)
+export const getApiTokens = () =>
+  apiFetch("/api/auth/tokens").then((r) => handle<ApiToken[]>(r));
+
+export const createApiToken = (name: string) =>
+  apiFetch("/api/auth/tokens", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name }),
+  }).then((r) => handle<ApiToken & { token: string }>(r));
+
+export const deleteApiToken = (id: string) =>
+  apiFetch(`/api/auth/tokens/${id}`, { method: "DELETE" }).then((r) => handle<void>(r));
 
 // Properties
 export const getProperties = () =>

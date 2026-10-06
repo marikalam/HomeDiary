@@ -16,6 +16,21 @@ model User {
   createdAt     DateTime       @default(now())
   properties    Property[]
   googleAccount GoogleAccount?
+  apiTokens     ApiToken[]
+}
+
+// Personal API tokens, so tools like Claude can add events on the user's
+// behalf. Only a SHA-256 hash is stored; the token itself is shown once.
+model ApiToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  tokenHash  String    @unique
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
 }
 
 model GoogleAccount {
