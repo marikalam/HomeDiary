@@ -5,6 +5,13 @@ export interface AuthUser {
   lastName: string | null;
 }
 
+export interface ApiToken {
+  id: string;
+  name: string;
+  lastUsedAt: string | null;
+  createdAt: string;
+}
+
 export interface Attachment {
   id: string;
   filename: string;

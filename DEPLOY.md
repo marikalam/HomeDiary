@@ -122,6 +122,29 @@ Photos are downscaled in your browser before being sent to Claude, so
 large phone photos analyze quickly. Photos are only sent to Anthropic's API when
 you use the button.
 
+## 6. Adding events from Claude (optional)
+
+This lets you send photos to Claude in a Claude Code session and have it add
+the event to your timeline for you, photos included. Nothing to configure on
+Render — it uses a personal API token you create in the app.
+
+1. Open HomeDiary, click **🤖 Connect Claude** in the header, then **Create
+   token**, and copy the token (starts with `hd_`). It's only shown once.
+2. In Claude Code on the web, open the cloud environment menu in the
+   session's title bar → **Edit**:
+   - Under environment variables, add
+     `HOMEDIARY_URL=https://<your-render-url>` and
+     `HOMEDIARY_API_TOKEN=<the token>`.
+   - Under **Network access**, choose **Custom** and add your Render host
+     (e.g. `homediary.onrender.com`) to the allowed domains, keeping the
+     default package-manager list.
+3. Start a new session with this repository, attach your photos and say
+   something like "add this to my home diary". Claude drafts the event,
+   shows it to you, and posts it once you say go.
+
+A token can read and change everything in your account, so don't paste it
+into a chat. Revoke it any time from the same **Connect Claude** screen.
+
 ## Notes
 
 - The free Render instance sleeps after 15 minutes of no traffic; the first

@@ -16,6 +16,11 @@ fills in the title, type, a summary and the details it can read from them
 attached, and you review the draft before saving — see
 [DEPLOY.md](DEPLOY.md#5-claude-photo-analysis-optional).
 
+You can also add events straight from a Claude chat: click **🤖 Connect
+Claude** to create a personal API token, and Claude can post events, with
+photos, to your timeline — see
+[DEPLOY.md](DEPLOY.md#6-adding-events-from-claude-optional).
+
 Each property can be exported from its **Export** menu: an Excel workbook
 (summary, timeline with a cost total, and documents sheets) or a CSV of the
 timeline or the documents.
@@ -62,7 +67,7 @@ adding properties.
 server/            Express API + Prisma schema
   prisma/schema.prisma   Data model: User, Property, TimelineEvent, Document, Attachment
   src/routes/            REST endpoints (auth, properties, events, documents, attachments)
-  src/auth.ts            Password hashing, JWT sessions, requireAuth middleware
+  src/auth.ts            Password hashing, JWT sessions, API tokens, requireAuth middleware
   src/storage.ts         Cloudflare R2 (S3-compatible) file storage
   src/ai.ts              Claude photo analysis (drafts events from photos)
 client/            React app

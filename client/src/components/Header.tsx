@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { connectGoogleUrl, disconnectGoogle, getGoogleStatus } from "../api";
 import type { GoogleCalendarStatus } from "../types";
+import ClaudeAccessModal from "./ClaudeAccessModal";
 
 export default function Header() {
   const { user, logout, updateProfile } = useAuth();
@@ -14,6 +15,7 @@ export default function Header() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [googleStatus, setGoogleStatus] = useState<GoogleCalendarStatus | null>(null);
   const [googleMessage, setGoogleMessage] = useState<string | null>(null);
+  const [showClaudeAccess, setShowClaudeAccess] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -88,12 +90,16 @@ export default function Header() {
                   📅 Connect Google Calendar
                 </a>
               ))}
+            <button className="secondary" onClick={() => setShowClaudeAccess(true)}>
+              🤖 Connect Claude
+            </button>
             <button className="secondary" onClick={() => logout()}>
               Sign out
             </button>
           </div>
         )}
       </div>
+      {showClaudeAccess && <ClaudeAccessModal onClose={() => setShowClaudeAccess(false)} />}
       {googleMessage && (
         <div className="google-status-banner" onClick={() => setGoogleMessage(null)}>
           {googleMessage}
