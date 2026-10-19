@@ -20,6 +20,11 @@ Each property can be exported from its **Export** menu: an Excel workbook
 (summary, timeline with a cost total, and documents sheets) or a CSV of the
 timeline or the documents.
 
+**⬇ Full backup** (top right) downloads one zip of everything in your
+account: a `homediary-backup.json` with every property, timeline event and
+document, plus all attached photos and files under `files/`. Import that zip
+into the HomeDiary artifact on Claude to move your whole diary there.
+
 ## Stack
 
 - **Backend**: Node.js, Express, TypeScript, Prisma, Postgres, Cloudflare R2

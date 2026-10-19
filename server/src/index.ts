@@ -10,6 +10,7 @@ import { documentsRouter } from "./routes/documents";
 import { attachmentsRouter } from "./routes/attachments";
 import { googleRouter } from "./routes/google";
 import { exportRouter } from "./routes/export";
+import { backupRouter } from "./routes/backup";
 import { isAiConfigured } from "./ai";
 
 const app = express();
@@ -32,6 +33,7 @@ app.use("/api/properties/:propertyId/documents", documentsRouter);
 app.use("/api/properties/:propertyId/export", exportRouter);
 app.use("/api/attachments", attachmentsRouter);
 app.use("/api/google", googleRouter);
+app.use("/api/backup", backupRouter);
 
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 app.get("/api/ai/status", (_req, res) => res.json({ configured: isAiConfigured() }));

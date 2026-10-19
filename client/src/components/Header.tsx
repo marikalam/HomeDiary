@@ -88,6 +88,13 @@ export default function Header() {
                   📅 Connect Google Calendar
                 </a>
               ))}
+            <a
+              className="secondary"
+              href="/api/backup"
+              title="A zip of all your properties, events, documents and files"
+            >
+              ⬇ Full backup
+            </a>
             <button className="secondary" onClick={() => logout()}>
               Sign out
             </button>

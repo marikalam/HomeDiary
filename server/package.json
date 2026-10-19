@@ -16,6 +16,7 @@
     "@aws-sdk/client-s3": "^3.658.1",
     "@huggingface/transformers": "^4.3.0",
     "@prisma/client": "^5.19.1",
+    "archiver": "^5.3.2",
     "bcryptjs": "^2.4.3",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -26,6 +27,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@types/archiver": "^5.3.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/cookie-parser": "^1.4.7",
     "@types/cors": "^2.8.17",
